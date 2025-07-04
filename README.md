@@ -1,1 +1,41 @@
 # Network-Scanning-Script-with-Firewall-Evasion-technique-
+# Nmap Scan Project
+
+This project provides a simple Bash script to perform various Nmap network scans. The user can choose different scan types (TCP, UDP, SYN, Ping, Firewall Evasion, and Vulnerability Scanning) through an interactive prompt.
+
+## Features
+- TCP Scan (-sT)
+- UDP Scan (-sU)
+- SYN Scan (-sS)
+- Ping Scan (-sn)
+- Firewall Evasion Scan
+- Vulnerability Scan using Nmap Scripting Engine (NSE)
+
+## Prerequisites
+- *Nmap* must be installed on your system.
+- *sudo* privileges are required for certain scan types (e.g., SYN scan).
+
+## Installation
+
+1. Clone this repository:
+    bash
+    git clone https://github.com/yourusername/nmap_scan_project.git
+    cd nmap_scan_project
+    
+
+2. Ensure Nmap is installed:
+    bash
+    sudo apt install nmap
+
+3. Make the script executable:
+    bash
+    chmod +x nmap_scan.sh
+    
+
+4. Run the script:
+    bash
+    ./nmap_scan.sh
+    
+
+## License
+This project is licensed under the GPLv2 License (General Public License version 2).

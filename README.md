@@ -30,12 +30,12 @@ This project provides a simple Bash script to perform various Nmap network scans
 3. Make the script executable:
     bash
     chmod +x Scan_Tool.sh
-   chmod +x Scan_Tool_Gui.sh
+   chmod +x Scan_Tool_GUI.sh
     
 
 5. Run the script:
     bash
-    ./Scan_Tool_Gui.sh
+    ./Scan_Tool_GUI.sh
     
 
 ## License

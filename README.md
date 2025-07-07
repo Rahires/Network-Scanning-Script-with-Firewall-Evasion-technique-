@@ -19,7 +19,7 @@ This project provides a simple Bash script to perform various Nmap network scans
 
 1. Clone this repository:
     bash
-    git clone https://github.com/Rahires/Network-Scanning-Script-with-Firewall-Evasion-technique-
+    git clone https://github.com/Rahires/Network-Scanning-Script-with-Firewall-Evasion-technique-.git
     cd Network-Scanning-Script-with-Firewall-Evasion-technique-
     
 

@@ -40,3 +40,5 @@ This project provides a simple Bash script to perform various Nmap network scans
 
 ## License
 This project is licensed under the GPLv2 License (General Public License version 2).
+
+

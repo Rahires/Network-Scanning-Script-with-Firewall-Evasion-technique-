@@ -4,7 +4,7 @@
 
 # Ask for target using Zenity input box
 Target=$(zenity --entry \
-    --title="Nmap GUI" \
+    --title="Scan Tool Gui" \
     --text="Enter the target IP or domain:")
 
 # If user cancels or leaves blank
@@ -36,7 +36,7 @@ OUTPUT=$(./Scan_Tool.sh <<< "$Target"$'\n'"$ScanType" 2>&1)
 
 # Show result in a scrollable text window
 zenity --text-info \
-    --title="Nmap Scan Results" \
+    --title=" Scan Tool Results" \
     --width=800 \
     --height=600 \
     --filename=<(echo "$OUTPUT")

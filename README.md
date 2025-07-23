@@ -1,5 +1,4 @@
 # Network-Scanning-Script-with-Firewall-Evasion-technique-
-# Nmap Scan Project
 
 This project provides a simple Bash script to perform various Nmap network scans. The user can choose different scan types (TCP, UDP, SYN, Ping, Firewall Evasion, and Vulnerability Scanning) through an interactive prompt.
 

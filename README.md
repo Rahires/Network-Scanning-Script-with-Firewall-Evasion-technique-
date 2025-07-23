@@ -94,7 +94,7 @@ chmod +x Scan_Tool_GUI.sh
 Step 6: Run the script
 ./Scan_Tool_GUI.sh
 
-## 💻 How to Run on Windows
+3## 💻 How to Run on Windows
 
 This tool is written in Bash and relies on **Nmap**, so here’s how to set it up on Windows 
 
@@ -125,16 +125,31 @@ cd Network-Scanning-Script-with-Firewall-Evasion-technique-
 chmod +x Scan_Tool.sh Scan_Tool_GUI.sh
 ./Scan_Tool_GUI.sh
 
-Running on macOS
-Open Terminal.
 
-Install Homebrew (if not already installed):
-/bin/bash -c "$(curl -fsS https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-Install Nmap and Git:
-brew install nmap git
+4## 💻 How to Run on Mac os
 
-Clone the repository and run the script:
+Step-by-Step: Running on macOS
+Open Terminal:
+You can find Terminal in Applications > Utilities > Terminal, or search for it using Spotlight (Cmd + Space, then type "Terminal").
+
+Install Homebrew (if you don’t have it):
+Homebrew is the popular package manager for macOS.
+
+Paste this command and press Enter:
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+Install Git and Nmap:
+
+Run:
+
+brew install git nmap
+Clone your scanning tool repository:
 git clone https://github.com/Rahires/Network-Scanning-Script-with-Firewall-Evasion-technique-.git
 cd Network-Scanning-Script-with-Firewall-Evasion-technique-
+
+Make the scripts executable:
 chmod +x Scan_Tool.sh Scan_Tool_GUI.sh
-./Scan_Tool_GUI.sh
+Run the script:
+
+You might need to run it with elevated privileges for some scan types:
+sudo ./Scan_Tool_GUI.sh

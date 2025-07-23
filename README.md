@@ -64,7 +64,7 @@ Happy scanning! 🔍🚀
 
 
 
-## 📱 How to Install and Run on Mobile (Android)
+2## 📱 How to Install and Run on Mobile (Android)
 
 You can run this network scanning tool on your Android phone using **Termux**, a powerful terminal emulator and Linux environment.
 
@@ -75,13 +75,9 @@ You can run this network scanning tool on your Android phone using **Termux**, a
 ### Step 2: Update packages in Termux
 
 Open Termux and run:
-
-```bash
 pkg update && pkg upgrade
+
 Step 3: Install required packages
-bash
-Copy
-Edit
 pkg install git
 pkg install nmap
 pkg install bash
@@ -98,3 +94,47 @@ chmod +x Scan_Tool_GUI.sh
 Step 6: Run the script
 ./Scan_Tool_GUI.sh
 
+## 💻 How to Run on Windows
+
+This tool is written in Bash and relies on **Nmap**, so here’s how to set it up on Windows 
+
+---
+ ### Running on Windows
+
+#### Option 1: Using Windows Subsystem for Linux (WSL)
+
+1. **Install WSL:**
+
+- Open PowerShell as Administrator and run:
+
+  ```powershell
+  wsl --install
+Restart your computer if prompted.
+
+Open WSL Terminal:
+
+Launch the Ubuntu (or your chosen Linux distro) app from the Start menu.
+
+Install required packages inside WSL:
+sudo apt update
+sudo apt install git nmap bash
+
+Clone your repository and run the script:
+git clone https://github.com/Rahires/Network-Scanning-Script-with-Firewall-Evasion-technique-.git
+cd Network-Scanning-Script-with-Firewall-Evasion-technique-
+chmod +x Scan_Tool.sh Scan_Tool_GUI.sh
+./Scan_Tool_GUI.sh
+
+Running on macOS
+Open Terminal.
+
+Install Homebrew (if not already installed):
+/bin/bash -c "$(curl -fsS https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+Install Nmap and Git:
+brew install nmap git
+
+Clone the repository and run the script:
+git clone https://github.com/Rahires/Network-Scanning-Script-with-Firewall-Evasion-technique-.git
+cd Network-Scanning-Script-with-Firewall-Evasion-technique-
+chmod +x Scan_Tool.sh Scan_Tool_GUI.sh
+./Scan_Tool_GUI.sh

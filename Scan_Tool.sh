@@ -43,7 +43,7 @@ elif [ "$scan_type" -eq 5 ]; then
 
 elif [ "$scan_type" -eq 6 ]; then
     echo -e "\n[+] Running Vulnerability Scan (Using NSE)..."
-    sudo nmap -sV --script vuln -p- -T3 -F"$Target"
+    sudo nmap -sV --script vuln -p- -T3  "$Target"
 
 else
     echo "Invalid option selected."

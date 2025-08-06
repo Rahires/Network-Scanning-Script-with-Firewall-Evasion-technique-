@@ -39,7 +39,7 @@ elif [ "$scan_type" -eq 4 ]; then
 
 elif [ "$scan_type" -eq 5 ]; then
     echo -e "\n[+] Running Stealth Scan with Firewall Evasion Techniques..."
-    sudo nmap -sS -f --source-port 53 -T4 --spoof-mac 0 -v "$Target"
+    sudo nmap -sS -f --source-port 53 -Pn -T4 --spoof-mac 0 --data-length 200 -v "$Target"
 
 elif [ "$scan_type" -eq 6 ]; then
     echo -e "\n[+] Running Vulnerability Scan (Using NSE)..."

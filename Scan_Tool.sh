@@ -27,15 +27,15 @@ if [ "$scan_type" -eq 1 ]; then
 
 elif [ "$scan_type" -eq 2 ]; then
     echo -e "\n[+] Running UDP Scan..."
-    sudo nmap -sU -v -O -sV -F "$Target"
+    sudo nmap -sU -v -O -sV -T3 "$Target"
 
 elif [ "$scan_type" -eq 3 ]; then
     echo -e "\n[+] Running SYN Scan..."
-    sudo nmap -sS -v -O -sV -F "$Target"
+    sudo nmap -sS -v -O -sV -T3 "$Target"
 
 elif [ "$scan_type" -eq 4 ]; then
     echo -e "\n[+] Running Ping Scan (Host Discovery Only)..."
-    nmap -sn -v -F "$Target"
+    nmap -sn -v -T3 "$Target"
 
 elif [ "$scan_type" -eq 5 ]; then
     echo -e "\n[+] Running Stealth Scan with Firewall Evasion Techniques..."

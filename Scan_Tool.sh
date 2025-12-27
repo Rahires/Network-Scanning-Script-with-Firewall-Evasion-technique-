@@ -23,7 +23,7 @@ read -p "Enter your choice (1-6): " scan_type
 # Process the selected scan type
 if [ "$scan_type" -eq 1 ]; then
     echo -e "\n[+] Running TCP Scan..."
-    nmap -sT -v -O -sV -F "$Target"
+    sudo nmap -sT -v -O -sV -F "$Target"
 
 elif [ "$scan_type" -eq 2 ]; then
     echo -e "\n[+] Running UDP Scan..."
@@ -39,7 +39,7 @@ elif [ "$scan_type" -eq 4 ]; then
 
 elif [ "$scan_type" -eq 5 ]; then
     echo -e "\n[+] Running Stealth Scan with Firewall Evasion Techniques..."
-    sudo nmap -sS -f --source-port 53 -Pn -T4 --spoof-mac 0 --data-length 200 -v "$Target"
+    sudo nmap -sS -f --source-port 53 -Pn -T2 --spoof-mac 0 --data-length 200 -v "$Target"
 
 elif [ "$scan_type" -eq 6 ]; then
     echo -e "\n[+] Running Vulnerability Scan (Using NSE)..."

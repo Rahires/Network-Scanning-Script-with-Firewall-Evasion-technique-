@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Nmap Copyright and License
@@ -20,6 +19,12 @@ echo -e "5. Firewall Evasion Scan"
 echo -e "6. Vulnerability Scan (Using NSE)"
 read -p "Enter your choice (1-6): " scan_type
 
+# Validate input
+if ! [[ "$scan_type" =~ ^[1-6]$ ]]; then
+    echo "Invalid option selected."
+    exit 1
+fi
+
 # Process the selected scan type
 if [ "$scan_type" -eq 1 ]; then
     echo -e "\n[+] Running TCP Scan..."
@@ -38,14 +43,15 @@ elif [ "$scan_type" -eq 4 ]; then
     nmap -sn -v -T3 "$Target"
 
 elif [ "$scan_type" -eq 5 ]; then
-    echo -e "\n[+] Running Stealth Scan with Firewall Evasion Techniques..."
-    sudo nmap -sS -f --source-port 53 -Pn -T2 --spoof-mac 0 --data-length 200 -v "$Target"
+    echo -e "\n[+] Running Firewall Evasion Scan..."
+    sudo nmap -sS -f \
+        -D RND:5 \
+        --source-port 53 \
+        --spoof-mac 00:11:22:33:44:55 \
+        --data-length 200 \
+        -Pn -T2 -v "$Target"
 
 elif [ "$scan_type" -eq 6 ]; then
     echo -e "\n[+] Running Vulnerability Scan (Using NSE)..."
-    sudo nmap -sV --script vuln -p- -T3  "$Target"
-
-else
-    echo "Invalid option selected."
+    sudo nmap -sV --script vuln -p- -T3 "$Target"
 fi
-

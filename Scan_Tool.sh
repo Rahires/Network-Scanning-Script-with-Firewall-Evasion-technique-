@@ -1,57 +1,148 @@
 #!/bin/bash
 
-# Nmap Copyright and License
-# Nmap (Network Mapper) - Free and Open Source Tool for Network Exploration
-# Copyright (C) 1996-2025 Gordon Lyon (Fyodor)
-# Nmap is licensed under the GPLv2 License (General Public License version 2).
-# For more details, visit: https://nmap.org/
+# ==========================================================
+# Project Title : Network Scanning Tool
+# Degree        : B.Sc Final Year Project
+# Author        : Sahebrao Rahire 
+# Description   : Real-time Nmap scanning with validation,
+#                 auto-installation, reporting, colors,
+#                 and progress visualization.
+# ==========================================================
 
-# Ask for target IP or domain
-read -p "Enter a target: " Target
+# ------------------------------
+# Colors
+# ------------------------------
+RED="\e[31m"
+GREEN="\e[32m"
+YELLOW="\e[33m"
+BLUE="\e[34m"
+RESET="\e[0m"
 
-# Scan type menu
-echo "Select a scan type..."
-echo -e "\n1. TCP Scan"
-echo -e "2. UDP Scan"
-echo -e "3. SYN Scan"
-echo -e "4. Ping Scan"
-echo -e "5. Firewall Evasion Scan"
-echo -e "6. Vulnerability Scan (Using NSE)"
-read -p "Enter your choice (1-6): " scan_type
+# ------------------------------
+# Spinner (Progress Indicator)
+# ------------------------------
+spinner() {
+    local pid=$!
+    local delay=0.1
+    local spinstr='|/-\'
+    while ps -p $pid &>/dev/null; do
+        for i in {0..3}; do
+            printf "\r${YELLOW}[+] Scanning... ${spinstr:$i:1}${RESET}"
+            sleep $delay
+        done
+    done
+    printf "\r${GREEN}[✓] Scan finished${RESET}\n"
+}
 
-# Validate input
-if ! [[ "$scan_type" =~ ^[1-6]$ ]]; then
-    echo "Invalid option selected."
-    exit 1
+# ------------------------------
+# Check & Install Nmap
+# ------------------------------
+check_nmap() {
+    if ! command -v nmap &>/dev/null; then
+        echo -e "${RED}[!] Nmap not found.${RESET}"
+        read -p "Install Nmap now? (y/n): " choice
+        [[ ! "$choice" =~ ^[Yy]$ ]] && exit 1
+
+        echo -e "${BLUE}[+] Installing Nmap...${RESET}"
+        if command -v apt &>/dev/null; then
+            sudo apt update && sudo apt install -y nmap
+        elif command -v yum &>/dev/null; then
+            sudo yum install -y nmap
+        elif command -v dnf &>/dev/null; then
+            sudo dnf install -y nmap
+        elif command -v pacman &>/dev/null; then
+            sudo pacman -Sy nmap --noconfirm
+        else
+            echo -e "${RED}[!] Unsupported package manager.${RESET}"
+            exit 1
+        fi
+    fi
+    echo -e "${GREEN}[✓] Nmap ready${RESET}"
+}
+
+# ------------------------------
+# Validation Functions
+# ------------------------------
+validate_ip() { [[ $1 =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; }
+validate_cidr() { [[ $1 =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]]; }
+validate_range() { [[ $1 =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}-[0-9]{1,3}$ ]]; }
+validate_domain() { [[ $1 =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; }
+
+validate_targets() {
+    IFS=',' read -ra T <<< "$1"
+    for t in "${T[@]}"; do
+        validate_ip "$t" || validate_cidr "$t" || validate_range "$t" || validate_domain "$t" || return 1
+    done
+}
+
+# ------------------------------
+# Start Program
+# ------------------------------
+clear
+echo -e "${BLUE}=============================================="
+echo "      ADVANCED NETWORK SCANNING TOOL"
+echo "==============================================${RESET}"
+
+check_nmap
+
+read -p "Enter target(s): " TARGET
+validate_targets "$TARGET" || { echo -e "${RED}[!] Invalid target${RESET}"; exit 1; }
+
+echo
+echo "1. TCP Scan"
+echo "2. UDP Scan"
+echo "3. SYN Scan"
+echo "4. Ping Scan"
+echo "5. Firewall Evasion Scan"
+echo "6. Vulnerability Scan"
+read -p "Select scan (1-6): " SCAN
+
+[[ ! "$SCAN" =~ ^[1-6]$ ]] && { echo -e "${RED}[!] Invalid option${RESET}"; exit 1; }
+
+# ------------------------------
+# Report Setup
+# ------------------------------
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+REPORT_DIR="reports"
+mkdir -p "$REPORT_DIR"
+
+TXT="$REPORT_DIR/scan_$TIMESTAMP.txt"
+XML="$REPORT_DIR/scan_$TIMESTAMP.xml"
+HTML="$REPORT_DIR/scan_$TIMESTAMP.html"
+
+# ------------------------------
+# Scan Execution
+# ------------------------------
+echo -e "${YELLOW}[+] Scan started on $TARGET${RESET}"
+
+case $SCAN in
+    1) CMD="sudo nmap -sT -sV -O -F $TARGET" ;;
+    2) CMD="sudo nmap -sU -sV -T3 $TARGET" ;;
+    3) CMD="sudo nmap -sS -sV -T3 $TARGET" ;;
+    4) CMD="nmap -sn $TARGET" ;;
+    5) CMD="sudo nmap -sS -f -D RND:5 --source-port 53 -Pn $TARGET" ;;
+    6) CMD="sudo nmap -sV --script vuln -p- $TARGET" ;;
+esac
+
+($CMD -oN "$TXT" -oX "$XML") & spinner
+
+# ------------------------------
+# HTML Report
+# ------------------------------
+if command -v xsltproc &>/dev/null; then
+    xsltproc "$XML" -o "$HTML"
+    echo -e "${GREEN}[✓] HTML report generated${RESET}"
+else
+    echo -e "${YELLOW}[!] xsltproc not found (HTML skipped)${RESET}"
 fi
 
-# Process the selected scan type
-if [ "$scan_type" -eq 1 ]; then
-    echo -e "\n[+] Running TCP Scan..."
-    sudo nmap -sT -v -O -sV -F "$Target"
-
-elif [ "$scan_type" -eq 2 ]; then
-    echo -e "\n[+] Running UDP Scan..."
-    sudo nmap -sU -v -O -sV -T3 "$Target"
-
-elif [ "$scan_type" -eq 3 ]; then
-    echo -e "\n[+] Running SYN Scan..."
-    sudo nmap -sS -v -O -sV -T3 "$Target"
-
-elif [ "$scan_type" -eq 4 ]; then
-    echo -e "\n[+] Running Ping Scan (Host Discovery Only)..."
-    nmap -sn -v -T3 "$Target"
-
-elif [ "$scan_type" -eq 5 ]; then
-    echo -e "\n[+] Running Firewall Evasion Scan..."
-    sudo nmap -sS -f \
-        -D RND:5 \
-        --source-port 53 \
-        --spoof-mac 00:11:22:33:44:55 \
-        --data-length 200 \
-        -Pn -T2 -v "$Target"
-
-elif [ "$scan_type" -eq 6 ]; then
-    echo -e "\n[+] Running Vulnerability Scan (Using NSE)..."
-    sudo nmap -sV --script vuln -p- -T3 "$Target"
-fi
+# ------------------------------
+# Completion
+# ------------------------------
+echo -e "${GREEN}=============================================="
+echo "[✓] Scan Completed Successfully"
+echo "Reports saved in: $REPORT_DIR"
+echo "TXT : $TXT"
+echo "XML : $XML"
+echo "HTML: $HTML"
+echo "==============================================${RESET}"

@@ -1,155 +1,122 @@
-# 🚀 Network Scanning Script with Firewall Evasion Techniques
+Advanced Network Scanning Tool (GUI)
 
-Welcome to this powerful **Bash-based Nmap scanning tool** that offers multiple scanning options with stealth and vulnerability detection features — all through an interactive menu!
+Welcome to the Advanced Network Scanning Tool, a Bash‑based GUI application built using Nmap, Zenity, and Shodan API.
+This tool provides multiple network scanning techniques, firewall evasion methods, and vulnerability detection, all through an interactive graphical interface.
 
----
+This project is developed as a B.Sc Final Year Project (2026) for educational and authorized security testing purposes.
 
-## ✨ Features
+Features
+🔍 Nmap Scanning Options
+Scan Type	Description
+🔹 TCP Scan (-sT)	Standard TCP connect scan
+🔹 UDP Scan (-sU)	UDP port scan (requires sudo)
+🔹 SYN Scan (-sS)	Stealth SYN scan (requires sudo)
+🔹 Ping Scan (-sn)	Host discovery / ping sweep
+🔹 Firewall Evasion Scan	Fragmentation, decoys & source‑port spoofing
+🔹 Vulnerability Scan	NSE vulnerability scripts on all ports
 
-| Scan Type                   | Description                                                  |
-|-----------------------------|--------------------------------------------------------------|
-| 🔹 **TCP Scan** (`-sT`)        | Basic TCP connect scan (no root required)                   |
-| 🔹 **UDP Scan** (`-sU`)        | UDP port scan (requires `sudo`)                             |
-| 🔹 **SYN Scan** (`-sS`)        | Stealth SYN scan (requires `sudo`)                          |
-| 🔹 **Ping Scan** (`-sn`)       | Host discovery ping sweep                                   |
-| 🔹 **Firewall Evasion Scan**  | Uses fragmentation, source port spoofing & MAC spoofing    |
-| 🔹 **Vulnerability Scan**     | Runs Nmap Scripting Engine (NSE) vuln scripts on all ports |
+Shodan Intelligence (Optional)
 
----
+🔹 Shodan IP Intelligence
 
-## 📋 Prerequisites
+🔹 Shodan Search Queries
 
-- **Nmap** must be installed on your system  
-- **sudo** privileges are required for UDP, SYN, firewall evasion, and vuln scans  
-- Tested on Linux (Debian/Ubuntu recommended)
+🔐 Secure API key input via GUI
 
----
+🖥️ GUI Capabilities
 
-## ⚙️ Installation & Usage
+Zenity‑based interactive windows
 
-### 1. Clone the repository
+Input validation (IP / CIDR / Range / Domain)
 
-```bash
-git clone https://github.com/Rahires/Network-Scanning-Script-with-Firewall-Evasion-technique-.git
-cd Network-Scanning-Script-with-Firewall-Evasion-technique-
+Progress bar during scans
 
-2. Install Nmap
+Automatic report generation
+
+Timestamp‑based scan logs
+
+Prerequisites
+
+Linux‑based OS (Ubuntu, Kali, Debian, Fedora, Arch)
+
+Nmap
+
+Zenity
+
+curl
+
+jq
+
+sudo privileges (for advanced scans)
+
+Optional: Shodan API Key
+
+Installation & Usage (Linux)
+1️⃣ Clone the Repository
+
+git clone https://github.com/Rahires/Advanced-Network-Scanning-Tool.git
+cd Advanced-Network-Scanning-Tool
+
+2️⃣ Install Required Packages
 sudo apt update
+sudo apt install nmap zenity curl jq -y
 
-sudo apt install nmap
-3. Make scripts executable
-chmod +x Scan_Tool.sh
-chmod +x Scan_Tool_GUI.sh
+3️⃣ Make Script Executable
+chmod +x Advanced_Scan_GUI.sh
 
-4. Run the GUI version for interactive scanning
-./Scan_Tool_GUI.sh
 
-🛡️ License
-This project is licensed under the GPLv2 License (General Public License version 2).
-Read more: GNU GPLv2
+4️⃣ Run the Tool
+./Advanced_Scan_GUI.sh
+
+
+⚠️ Some scan types require sudo/root privileges
+
+
+Scan Reports
+
+All scan results are saved automatically in:
+
+reports/scan_YYYYMMDD_HHMMSS.txt
+
+
+Reports include:
+
+Target details
+
+Scan type
+
+Nmap or Shodan output
+
+Timestamp
+
+License
+
+This project is licensed under the GNU General Public License v2.0 (GPL‑2.0).
+
+🔗 https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
 ⚠️ Disclaimer
-Warning: Always have explicit permission before scanning any networks or systems.
-Unauthorized scanning is illegal and unethical. Use this tool responsibly.
 
-🙌 Contributing
-Feel free to open issues or submit pull requests to improve this tool.
-Your feedback and contributions are highly appreciated!
+WARNING:
+This tool is intended only for educational, research, and authorized penetration testing.
 
-📬 Contact
-Created by Sahebrao Shivaji Rahire
-GitHub: https://github.com/Rahires
+Scanning networks or systems without explicit permission is illegal and unethical.
 
-Happy scanning! 🔍🚀
+The author is not responsible for misuse, damage, or legal consequences arising from the use of this tool.
 
+👉❤💕Contributing
 
+Contributions are welcome!
 
-2## 📱 How to Install and Run on Mobile (Android)
+Open issues
 
-You can run this network scanning tool on your Android phone using **Termux**, a powerful terminal emulator and Linux environment.
+Submit pull requests
 
-### Step 1: Install Termux
-
-- Go to the Google Play Store or [F-Droid](https://f-droid.org/en/packages/com.termux/) and install **Termux**.
-
-### Step 2: Update packages in Termux
-
-Open Termux and run:
-pkg update && pkg upgrade
-
-Step 3: Install required packages
-pkg install git
-pkg install nmap
-pkg install bash
-Note: Some scans (like SYN scan) may not work fully without root access on mobile devices.
-
-Step 4: Clone the repository
-git clone https://github.com/Rahires/Network-Scanning-Script-with-Firewall-Evasion-technique-.git
-cd Network-Scanning-Script-with-Firewall-Evasion-technique-
-
-Step 5: Make the script executable
-chmod +x Scan_Tool.sh
-chmod +x Scan_Tool_GUI.sh
-
-Step 6: Run the script
-./Scan_Tool_GUI.sh
-
-3## 💻 How to Run on Windows
-
-This tool is written in Bash and relies on **Nmap**, so here’s how to set it up on Windows 
-
----
- ### Running on Windows
-
-#### Option 1: Using Windows Subsystem for Linux (WSL)
-
-1. **Install WSL:**
-
-- Open PowerShell as Administrator and run:
-
-  ```powershell
-  wsl --install
-Restart your computer if prompted.
-
-Open WSL Terminal:
-
-Launch the Ubuntu (or your chosen Linux distro) app from the Start menu.
-
-Install required packages inside WSL:
-sudo apt update
-sudo apt install git nmap bash
-
-Clone your repository and run the script:
-git clone https://github.com/Rahires/Network-Scanning-Script-with-Firewall-Evasion-technique-.git
-cd Network-Scanning-Script-with-Firewall-Evasion-technique-
-chmod +x Scan_Tool.sh Scan_Tool_GUI.sh
-./Scan_Tool_GUI.sh
+Suggest improvements
 
 
-4## 💻 How to Run on Mac os
 
-Step-by-Step: Running on macOS
-Open Terminal:
-You can find Terminal in Applications > Utilities > Terminal, or search for it using Spotlight (Cmd + Space, then type "Terminal").
 
-Install Homebrew (if you don’t have it):
-Homebrew is the popular package manager for macOS.
 
-Paste this command and press Enter:
 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-Install Git and Nmap:
 
-Run:
-
-brew install git nmap
-Clone your scanning tool repository:
-git clone https://github.com/Rahires/Network-Scanning-Script-with-Firewall-Evasion-technique-.git
-cd Network-Scanning-Script-with-Firewall-Evasion-technique-
-
-Make the scripts executable:
-chmod +x Scan_Tool.sh Scan_Tool_GUI.sh
-Run the script:
-
-You might need to run it with elevated privileges for some scan types:
-sudo ./Scan_Tool_GUI.sh

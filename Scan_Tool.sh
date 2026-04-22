@@ -30,13 +30,13 @@
 # Nmap:
 #   - Copyright (c) Gordon "Fyodor" Lyon
 #   - Licensed under GNU GPL v2
-#   - https://nmap.org/book/man-legal.html
+#   - https://nmap.org/book/man-legal.html [web:14]
 #
 # Shodan:
 #   - Copyright (c) Shodan LLC
 #   - This tool uses the Shodan REST API
 #   - Subject to Shodan Terms of Service
-#   - https://www.shodan.io/terms
+#   - https://www.shodan.io/terms [web:21]
 #
 # ---------------------- DISCLAIMER -------------------------
 #
@@ -59,6 +59,10 @@
 #
 # ==========================================================
 
+set -o errexit
+set -o pipefail
+set -o nounset
+
 # ------------------------------
 # Colors
 # ------------------------------
@@ -69,18 +73,37 @@ BLUE="\e[34m"
 RESET="\e[0m"
 
 # ------------------------------
+# Trap for clean exit
+# ------------------------------
+cleanup() {
+    echo -e "\n${YELLOW}[!] Exiting...${RESET}"
+}
+trap cleanup INT TERM
+
+# ------------------------------
 # Spinner
 # ------------------------------
 spinner() {
-    local pid=$!
+    local pid="$1"
     local spin='|/-\'
-    while ps -p $pid &>/dev/null; do
+    while kill -0 "$pid" 2>/dev/null; do
         for i in {0..3}; do
             printf "\r${YELLOW}[+] Scanning... ${spin:$i:1}${RESET}"
             sleep 0.1
         done
     done
     printf "\r${GREEN}[✓] Scan finished${RESET}\n"
+}
+
+# ------------------------------
+# Check dependencies
+# ------------------------------
+require_cmd() {
+    local cmd="$1"
+    if ! command -v "$cmd" &>/dev/null; then
+        echo -e "${RED}[!] Required command not found: $cmd${RESET}"
+        exit 1
+    fi
 }
 
 # ------------------------------
@@ -99,7 +122,7 @@ check_nmap() {
         elif command -v pacman &>/dev/null; then
             sudo pacman -Sy nmap --noconfirm
         else
-            echo -e "${RED}[!] Unsupported package manager${RESET}"
+            echo -e "${RED}[!] Unsupported package manager. Install nmap manually.${RESET}"
             exit 1
         fi
     fi
@@ -110,25 +133,42 @@ check_nmap() {
 # Validation Functions
 # ------------------------------
 validate_ip() {
-    [[ $1 =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]
+    local ip="$1"
+    [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+
+    IFS='.' read -r -a octets <<< "$ip"
+    for octet in "${octets[@]}"; do
+        ((octet >= 0 && octet <= 255)) || return 1
+    done
+    return 0
 }
 
 validate_cidr() {
-    [[ $1 =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]]
+    local cidr="$1"
+    [[ "$cidr" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]] || return 1
+    validate_ip "${cidr%%/*}"
 }
 
 validate_range() {
-    [[ $1 =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}-[0-9]{1,3}$ ]]
+    local range="$1"
+    [[ "$range" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}-[0-9]{1,3}$ ]] || return 1
+
+    local base="${range%-*}"
+    local last="${range##*-}"
+    validate_ip "$base" || return 1
+    ((last >= 0 && last <= 255)) || return 1
 }
 
 validate_domain() {
-    [[ $1 =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]
+    local domain="$1"
+    [[ "$domain" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]
 }
 
 validate_targets() {
-    IFS=',' read -ra TARGETS <<< "$1"
+    local input="$1"
+    IFS=',' read -ra TARGETS <<< "$input"
     for target in "${TARGETS[@]}"; do
-        target=$(echo "$target" | xargs)
+        target="$(echo "$target" | xargs)"
         validate_ip "$target" \
         || validate_cidr "$target" \
         || validate_range "$target" \
@@ -142,11 +182,12 @@ validate_targets() {
 # Secure Shodan Key Logic
 # ------------------------------
 get_shodan_key() {
-    if [[ -z "$SHODAN_API_KEY" ]]; then
+    if [[ -z "${SHODAN_API_KEY:-}" ]]; then
         read -s -p "Enter Shodan API Key (leave empty to skip Shodan): " SHODAN_API_KEY
         echo
     fi
-    [[ -z "$SHODAN_API_KEY" ]] && return 1
+    [[ -z "${SHODAN_API_KEY:-}" ]] && return 1
+    export SHODAN_API_KEY
     return 0
 }
 
@@ -157,26 +198,27 @@ shodan_ip_scan() {
     local target="$1"
     local report="$2"
 
-    validate_ip "$target" || {
-        echo "[!] Shodan IP scan requires a single IP address" >> "$report"
+    if ! validate_ip "$target"; then
+        echo "[!] Shodan IP scan requires a single IP address (no CIDR, range, or domain)." >> "$report"
         return
-    }
+    fi
 
-    response=$(curl -s "https://api.shodan.io/shodan/host/$target?key=$SHODAN_API_KEY")
+    local response
+    response="$(curl -s --fail "https://api.shodan.io/shodan/host/$target?key=$SHODAN_API_KEY" || true)"
 
-    if echo "$response" | grep -q '"error"'; then
-        echo "No Shodan data available" >> "$report"
+    if [[ -z "$response" ]] || echo "$response" | grep -q '"error"'; then
+        echo "No Shodan data available or API error" >> "$report"
         return
     fi
 
     echo -e "\n========== SHODAN IP INTELLIGENCE ==========" >> "$report"
     echo "$response" | jq -r '
         "IP Address   : \(.ip_str)",
-        "Organization : \(.org // "N/A")",
-        "ISP          : \(.isp // "N/A")",
-        "OS           : \(.os // "Unknown")",
-        "Country      : \(.country_name // "N/A")",
-        "Open Ports   : \(.ports | join(", "))"
+        "Organization : \(.org // \"N/A\")",
+        "ISP          : \(.isp // \"N/A\")",
+        "OS           : \(.os // \"Unknown\")",
+        "Country      : \(.country_name // \"N/A\")",
+        "Open Ports   : \(.ports | join(\", \"))"
     ' >> "$report"
 }
 
@@ -185,20 +227,42 @@ shodan_ip_scan() {
 # ------------------------------
 shodan_search_scan() {
     local report="$1"
+    local query
+
     read -p "Enter Shodan search query: " query
+    [[ -z "$query" ]] && {
+        echo "Empty Shodan query, skipping." >> "$report"
+        return
+    }
 
-    response=$(curl -s "https://api.shodan.io/shodan/host/search?key=$SHODAN_API_KEY&query=$query")
+    local response
+    response="$(curl -s --fail "https://api.shodan.io/shodan/host/search?key=$SHODAN_API_KEY&query=$query" || true)"
 
-    if echo "$response" | grep -q '"error"'; then
+    if [[ -z "$response" ]] || echo "$response" | grep -q '"error"'; then
         echo "No results or API error" >> "$report"
         return
     fi
 
     echo -e "\n========== SHODAN SEARCH RESULTS ==========" >> "$report"
     echo "$response" | jq -r '
-        .matches[] |
-        "IP: \(.ip_str) | Port: \(.port) | Org: \(.org // "N/A") | Country: \(.location.country_name // "N/A")"
+        .matches[]? |
+        "IP: \(.ip_str) | Port: \(.port) | Org: \(.org // \"N/A\") | Country: \(.location.country_name // \"N/A\")"
     ' >> "$report"
+}
+
+# ------------------------------
+# Menu
+# ------------------------------
+print_menu() {
+    echo
+    echo "1. TCP Scan (sT, service & OS detection, fast ports)"
+    echo "2. UDP Scan (sU, service detection, slower)"
+    echo "3. SYN Scan (sS, stealthy, service detection)"
+    echo "4. Ping Scan (host discovery only)"
+    echo "5. Firewall Evasion Scan (fragmentation, decoys, source port tricks)"
+    echo "6. Vulnerability Scan (vuln scripts, all ports)"
+    echo "7. Shodan IP Intelligence (single IP)"
+    echo "8. Shodan Search (query-based)"
 }
 
 # ------------------------------
@@ -210,34 +274,30 @@ echo "      ADVANCED NETWORK SCANNING TOOL"
 echo "      Secure Nmap + Optional Shodan"
 echo "==============================================${RESET}"
 
+# Check required tools
 check_nmap
+require_cmd curl
+require_cmd jq
 
+# Targets
 read -p "Enter target(s) (IP / CIDR / Range / Domain, comma-separated): " TARGET
-validate_targets "$TARGET" || {
+if ! validate_targets "$TARGET"; then
     echo -e "${RED}[!] Invalid target(s) provided${RESET}"
     exit 1
-}
+fi
 
-echo
-echo "1. TCP Scan"
-echo "2. UDP Scan"
-echo "3. SYN Scan"
-echo "4. Ping Scan"
-echo "5. Firewall Evasion Scan"
-echo "6. Vulnerability Scan"
-echo "7. Shodan IP Intelligence (Optional)"
-echo "8. Shodan Search (Optional)"
+print_menu
 read -p "Select scan (1-8): " SCAN
 
-[[ ! "$SCAN" =~ ^[1-8]$ ]] && {
+if [[ ! "$SCAN" =~ ^[1-8]$ ]]; then
     echo -e "${RED}[!] Invalid option${RESET}"
     exit 1
-}
+fi
 
 # ------------------------------
 # Report Setup
 # ------------------------------
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+TIMESTAMP="$(date +"%Y%m%d_%H%M%S")"
 REPORT_DIR="reports"
 mkdir -p "$REPORT_DIR"
 REPORT="$REPORT_DIR/scan_$TIMESTAMP.txt"
@@ -245,25 +305,59 @@ REPORT="$REPORT_DIR/scan_$TIMESTAMP.txt"
 # ------------------------------
 # Scan Execution
 # ------------------------------
-case $SCAN in
-    1) CMD="sudo nmap -sT -sV -O -F $TARGET" ;;
-    2) CMD="sudo nmap -sU -sV -T3 $TARGET" ;;
-    3) CMD="sudo nmap -sS -sV -T3 $TARGET" ;;
-    4) CMD="nmap -sn $TARGET" ;;
-    5) CMD="sudo nmap -sS -f -D RND:5 --source-port 53 -Pn $TARGET" ;;
-    6) CMD="sudo nmap -sV --script vuln -p- $TARGET" ;;
+CMD=""
+
+case "$SCAN" in
+    1)
+        CMD="sudo nmap -sT -sV -O -F $TARGET"
+        ;;
+    2)
+        CMD="sudo nmap -sU -sV -T3 $TARGET"
+        ;;
+    3)
+        CMD="sudo nmap -sS -sV -T3 $TARGET"
+        ;;
+    4)
+        CMD="nmap -sn $TARGET"
+        ;;
+    5)
+        CMD="sudo nmap -sS -f -D RND:5 --source-port 53 -Pn $TARGET"
+        ;;
+    6)
+        CMD="sudo nmap -sV --script vuln -p- $TARGET"
+        ;;
     7)
-        get_shodan_key || { echo "[!] Shodan skipped (no API key)"; exit 0; }
-        shodan_ip_scan "$TARGET" "$REPORT"
+        if get_shodan_key; then
+            shodan_ip_scan "$TARGET" "$REPORT"
+            echo -e "${GREEN}=============================================="
+            echo "[✓] Shodan IP Intelligence Completed"
+            echo "Report saved at: $REPORT"
+            echo "==============================================${RESET}"
+        else
+            echo "[!] Shodan skipped (no API key)"
+        fi
+        exit 0
         ;;
     8)
-        get_shodan_key || { echo "[!] Shodan skipped (no API key)"; exit 0; }
-        shodan_search_scan "$REPORT"
+        if get_shodan_key; then
+            shodan_search_scan "$REPORT"
+            echo -e "${GREEN}=============================================="
+            echo "[✓] Shodan Search Completed"
+            echo "Report saved at: $REPORT"
+            echo "==============================================${RESET}"
+        else
+            echo "[!] Shodan skipped (no API key)"
+        fi
+        exit 0
         ;;
 esac
 
 if [[ "$SCAN" =~ ^[1-6]$ ]]; then
-    ($CMD -oN "$REPORT") & spinner
+    echo -e "${YELLOW}[+] Running: $CMD${RESET}"
+    # Run scan in background, attach spinner
+    bash -c "$CMD -oN \"$REPORT\"" &
+    cmd_pid=$!
+    spinner "$cmd_pid"
 fi
 
 # ------------------------------
